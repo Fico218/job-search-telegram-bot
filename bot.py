@@ -13,7 +13,12 @@ import logging
 from datetime import datetime
 from typing import List
 
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
+
 from telegram import Update, Bot
 from telegram.ext import (
     Application,
@@ -32,9 +37,6 @@ from scrapers import (
 )
 from storage import JobStorage
 
-# Cargar variables de entorno
-load_dotenv()
-
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
@@ -42,8 +44,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Configuracion global
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+logger.info(f"TOKEN presente: {bool(BOT_TOKEN)} | CHAT_ID presente: {bool(CHAT_ID)}")
 SEARCH_KEYWORDS = os.getenv("SEARCH_KEYWORDS", "desarrollador python")
 LOCATION = os.getenv("LOCATION", "")
 REMOTE_ONLY = os.getenv("REMOTE_ONLY", "false").lower() == "true"
@@ -190,9 +193,10 @@ async def scheduled_search(bot: Bot):
 
 def main():
     if not BOT_TOKEN:
-        raise ValueError("Falta TELEGRAM_BOT_TOKEN en el archivo .env")
+        logger.error(f"Variables de entorno disponibles: {list(os.environ.keys())}")
+        raise ValueError("Falta TELEGRAM_BOT_TOKEN - agregala en Railway > Variables")
     if not CHAT_ID:
-        raise ValueError("Falta TELEGRAM_CHAT_ID en el archivo .env")
+        raise ValueError("Falta TELEGRAM_CHAT_ID - agregala en Railway > Variables")
 
     # Crear aplicacion de Telegram
     app = Application.builder().token(BOT_TOKEN).build()
